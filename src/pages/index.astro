@@ -25,17 +25,20 @@ const PIN_COUNT = 5;
 
     <div class="stage">
       <section class="keychain" aria-label="Choose a key">
+        <div class="keyring" aria-hidden="true"></div>
         <ul class="key-list" data-testid="key-list">
           {
-            KEYS.map((key) => (
-              <li>
+            KEYS.map((key, i) => (
+              <li class={`key-item key-fan-${i + 1}`}>
                 <button
                   type="button"
                   class={`key key-${key.id}`}
                   data-key={key.id}
                   data-testid={`key-${key.id}`}
                 >
-                  <span class="key-head" aria-hidden="true"></span>
+                  <span class="key-head" aria-hidden="true">
+                    <span class="key-hole" aria-hidden="true"></span>
+                  </span>
                   <span class="key-shaft" aria-hidden="true"></span>
                   <span class="visually-hidden">{key.label}</span>
                 </button>
@@ -50,6 +53,7 @@ const PIN_COUNT = 5;
         aria-label="Lock cross-section"
         data-testid="lock-stage"
       >
+        <div class="key-slot" data-testid="key-slot" aria-hidden="true"></div>
         <div class="lock">
           <div class="keyway" aria-hidden="true"></div>
           <div class="pin-stack" aria-hidden="true">
@@ -63,12 +67,13 @@ const PIN_COUNT = 5;
             }
             <div class="shear-line" data-testid="shear-line"></div>
           </div>
+          <div class="lock-cam" aria-hidden="true"></div>
         </div>
       </section>
     </div>
 
     <section class="controls" aria-label="Try the selected key">
-      <p class="controls__hint" data-testid="controls-hint">
+      <p class="controls-hint" data-testid="controls-hint" aria-live="polite">
         Select a key above to try it.
       </p>
       <div class="controls-insert">
