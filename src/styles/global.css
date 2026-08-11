@@ -4,13 +4,219 @@ body {
   font-family: system-ui, sans-serif;
   line-height: 1.6;
   color: #1a1a1a;
+  background: #f6f3ee;
 }
 
 main {
-  max-width: 40rem;
+  max-width: 56rem;
   margin: 0 auto;
 }
 
 a {
   color: #0b5fff;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.tagline {
+  color: #4a4a4a;
+  margin-top: -0.5rem;
+}
+
+/* Keychain + lock sit side by side on wide viewports, stacked on narrow
+   ones — see the two wireframes in PROCESS.md for the layouts this follows. */
+.stage {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+
+.keychain,
+.lock-stage {
+  width: 100%;
+}
+
+.key-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 0.5rem;
+}
+
+.key:focus-visible {
+  outline: 3px solid #0b5fff;
+  outline-offset: 2px;
+}
+
+.key-head {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 0.5rem solid currentcolor;
+  box-sizing: border-box;
+}
+
+.key-shaft {
+  width: 0.6rem;
+  height: 3rem;
+  background: currentcolor;
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% 70%,
+    150% 80%,
+    100% 90%,
+    150% 100%,
+    100% 100%,
+    0 100%
+  );
+}
+
+.key-bronze {
+  color: #a86a3d;
+}
+
+.key-steel {
+  color: #8a94a0;
+}
+
+.key-brass {
+  color: #c9a34e;
+}
+
+.key-silver {
+  color: #b7bcc2;
+}
+
+.lock-stage {
+  display: flex;
+  justify-content: center;
+}
+
+.lock {
+  display: flex;
+  align-items: stretch;
+  gap: 0.25rem;
+}
+
+.keyway {
+  width: 1.5rem;
+  height: 12rem;
+  background: #2b2b2b;
+  border-radius: 0.25rem 0 0 0.25rem;
+}
+
+.pin-stack {
+  position: relative;
+  display: flex;
+  gap: 0.5rem;
+  height: 12rem;
+  padding: 0.5rem;
+  background: #d9d4c9;
+  border-radius: 0 0.25rem 0.25rem 0;
+}
+
+.pin-chamber {
+  display: flex;
+  flex-direction: column;
+  width: 1.25rem;
+  background: #bfb9ac;
+  border-radius: 0.15rem;
+}
+
+.pin {
+  width: 100%;
+}
+
+.pin-top {
+  flex: 6;
+  background: #6b7280;
+  border-radius: 0.15rem 0.15rem 0 0;
+}
+
+.pin-bottom {
+  flex: 4;
+  background: #9ca3af;
+  border-radius: 0 0 0.15rem 0.15rem;
+}
+
+.shear-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 45%;
+  height: 2px;
+  border-top: 2px dashed #c0392b;
+  pointer-events: none;
+}
+
+.controls {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.controls-insert {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: min(100%, 20rem);
+}
+
+.controls-insert input[type="range"] {
+  width: 100%;
+}
+
+.turn-key {
+  padding: 0.5rem 1.5rem;
+  font: inherit;
+  border-radius: 0.5rem;
+  border: 1px solid #1a1a1a;
+  background: #fff;
+  cursor: pointer;
+}
+
+.turn-key:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (width >= 40rem) {
+  .stage {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .keychain,
+  .lock-stage {
+    width: auto;
+  }
 }

@@ -1,20 +1,91 @@
 ---
 import Layout from "../layouts/Layout.astro";
+
+const KEYS = [
+  { id: "bronze", label: "Bronze key" },
+  { id: "steel", label: "Steel key" },
+  { id: "brass", label: "Brass key" },
+  { id: "silver", label: "Silver key" },
+];
+
+const PIN_COUNT = 5;
 ---
 
-<Layout title="COMP4020 prototype">
+<Layout title="How locks work">
   <header>
     <nav aria-label="Primary">
       <a href="./">Home</a>
     </nav>
   </header>
   <main>
-    <h1>COMP4020 prototype</h1>
-    <p data-testid="intro">
-      Replace this with your prototype. This week's brief is on the course
-      website; <code>spec/README.md</code> explains how the checks in this repo
-      relate to it.
+    <h1>How locks work</h1>
+    <p class="tagline">
+      Pick a key. Try it. Watch what has to line up before it turns.
     </p>
+
+    <div class="stage">
+      <section class="keychain" aria-label="Choose a key">
+        <ul class="key-list" data-testid="key-list">
+          {
+            KEYS.map((key) => (
+              <li>
+                <button
+                  type="button"
+                  class={`key key-${key.id}`}
+                  data-key={key.id}
+                  data-testid={`key-${key.id}`}
+                >
+                  <span class="key-head" aria-hidden="true"></span>
+                  <span class="key-shaft" aria-hidden="true"></span>
+                  <span class="visually-hidden">{key.label}</span>
+                </button>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section
+        class="lock-stage"
+        aria-label="Lock cross-section"
+        data-testid="lock-stage"
+      >
+        <div class="lock">
+          <div class="keyway" aria-hidden="true"></div>
+          <div class="pin-stack" aria-hidden="true">
+            {
+              Array.from({ length: PIN_COUNT }).map((_, i) => (
+                <div class="pin-chamber" data-testid={`pin-chamber-${i}`}>
+                  <span class="pin pin-top"></span>
+                  <span class="pin pin-bottom"></span>
+                </div>
+              ))
+            }
+            <div class="shear-line" data-testid="shear-line"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="controls" aria-label="Try the selected key">
+      <p class="controls__hint" data-testid="controls-hint">
+        Select a key above to try it.
+      </p>
+      <div class="controls-insert">
+        <label for="insert-slider">Insert key</label>
+        <input
+          id="insert-slider"
+          type="range"
+          min="0"
+          max="100"
+          value="0"
+          disabled
+        />
+      </div>
+      <button class="turn-key" type="button" disabled data-testid="turn-key">
+        Turn key
+      </button>
+    </section>
   </main>
   <script src="../scripts/main.ts"></script>
 </Layout>
