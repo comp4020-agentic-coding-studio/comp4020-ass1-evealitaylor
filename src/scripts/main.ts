@@ -2,11 +2,31 @@ const keyButtons = document.querySelectorAll<HTMLButtonElement>(".key");
 const keyway = document.querySelector<HTMLElement>("[data-testid='keyway']");
 const slider = document.getElementById("insert-slider") as HTMLInputElement | null;
 const hint = document.querySelector<HTMLElement>(".controls-hint");
+const pinStack = document.querySelector<HTMLElement>(".pin-stack");
 const pinChambers = document.querySelectorAll<HTMLElement>(".pin-chamber");
 const pinAssemblies = document.querySelectorAll<HTMLElement>(".pin-assembly");
 const shearLine = document.querySelector<HTMLElement>("[data-testid='shear-line']");
+const turnKeyButton = document.querySelector<HTMLButtonElement>("[data-testid='turn-key']");
+const lockCam = document.querySelector<HTMLElement>(".lock-cam");
+
+function parseBitting(value: string | undefined): number[] {
+  return (value ?? "")
+    .split(",")
+    .map(Number)
+    .filter((n) => !Number.isNaN(n));
+}
+
+// The lock's own pin design (fixed, from the build-time bitting baked into
+// `.pin-stack`'s dataset) — the only key that opens the lock is the one
+// whose bitting matches this, position for position.
+const LOCK_BITTING = parseBitting(pinStack?.dataset.lockBitting);
+// Must match the LIFT_SCALE used in index.astro to compute each pin's rest
+// split, so a matching key's lift exactly cancels that offset at depth 1.
+const LIFT_SCALE = Number(pinStack?.dataset.liftScale) || 0.25;
+const ALIGN_EPSILON = 0.02;
 
 let selectedLi: HTMLLIElement | null = null;
+let selectedLabel = "Key";
 let keyDeltas = { restDx: 0, insertedDx: 0, dy: 0 };
 
 // Space to keep between the key's head and the viewport edge at rest, so a
@@ -70,41 +90,62 @@ function returnToRing(li: HTMLLIElement) {
   li.style.transform = "";
 }
 
-function getMaxLiftPx(): number {
+function getChamberHeightPx(): number {
   const chamber = pinChambers[0];
-  if (!chamber || !shearLine) return 0;
-  const chamberRect = chamber.getBoundingClientRect();
-  const shearRect = shearLine.getBoundingClientRect();
-  return chamberRect.top + chamberRect.height * 0.6 - shearRect.top;
+  return chamber ? chamber.getBoundingClientRect().height : 0;
 }
 
 function getSelectedBitting(): number[] {
   if (!selectedLi) return [];
   const button = selectedLi.querySelector<HTMLButtonElement>(".key");
-  return (button?.dataset.bitting ?? "")
-    .split(",")
-    .map(Number)
-    .filter((n) => !Number.isNaN(n));
+  return parseBitting(button?.dataset.bitting);
 }
 
 function currentDepth(): number {
   return slider ? Number(slider.value) / 100 : 0;
 }
 
-function updatePins(depth: number) {
-  const bitting = getSelectedBitting();
-  const maxLift = getMaxLiftPx();
+// A pin only reaches the shear line at full insertion if the selected key's
+// cut at that position matches the lock's own pin design — this is the
+// actual "does this key work" check, not just whether pins move.
+function isAligned(depth: number, bitting: number[]): boolean {
+  if (depth < 0.995 || bitting.length !== LOCK_BITTING.length) return false;
+  return bitting.every((value, i) => Math.abs(value - LOCK_BITTING[i]) < ALIGN_EPSILON);
+}
+
+function updatePins(depth: number, bitting: number[]) {
+  const chamberHeight = getChamberHeightPx();
   pinAssemblies.forEach((assembly, i) => {
     const factor = bitting[i] ?? 0;
-    const lift = depth * factor * maxLift;
+    const lift = depth * factor * LIFT_SCALE * chamberHeight;
     assembly.style.transform = lift ? `translateY(${-lift}px)` : "";
   });
 }
 
+function updateHint(depth: number, aligned: boolean) {
+  if (!hint) return;
+  if (!selectedLi) {
+    hint.textContent = "Select a key above to try it.";
+  } else if (aligned) {
+    hint.textContent = `${selectedLabel} fits — the pins line up. Turn the key.`;
+  } else if (depth >= 0.995) {
+    hint.textContent = `${selectedLabel} doesn't fit — the pins aren't lined up.`;
+  } else {
+    hint.textContent = `${selectedLabel} selected. Drag the slider to insert it.`;
+  }
+}
+
 function update() {
   const depth = currentDepth();
-  updatePins(depth);
+  const bitting = getSelectedBitting();
+  updatePins(depth, bitting);
   if (selectedLi) applyKeyTransform(selectedLi, depth);
+
+  const aligned = Boolean(selectedLi) && isAligned(depth, bitting);
+  shearLine?.classList.toggle("is-aligned", aligned);
+  lockCam?.classList.remove("is-turned");
+  if (turnKeyButton) turnKeyButton.disabled = !aligned;
+  updateHint(depth, aligned);
 }
 
 function setSelected(li: HTMLLIElement, selected: boolean) {
@@ -118,7 +159,6 @@ function deselect() {
   returnToRing(selectedLi);
   setSelected(selectedLi, false);
   selectedLi = null;
-  if (hint) hint.textContent = "Select a key above to try it.";
   if (slider) {
     slider.disabled = true;
     slider.value = "0";
@@ -144,9 +184,8 @@ function select(button: HTMLButtonElement) {
   li.classList.add("is-armed");
   setSelected(li, true);
 
-  const label =
+  selectedLabel =
     button.querySelector(".visually-hidden")?.textContent?.trim() ?? "Key";
-  if (hint) hint.textContent = `${label} selected. Drag the slider to insert it.`;
   if (slider) {
     slider.disabled = false;
     slider.value = "0";
@@ -162,6 +201,14 @@ keyButtons.forEach((button) => {
 });
 
 slider?.addEventListener("input", update);
+
+turnKeyButton?.addEventListener("click", () => {
+  if (!turnKeyButton || turnKeyButton.disabled || !hint) return;
+  const turned = lockCam?.classList.toggle("is-turned");
+  hint.textContent = turned
+    ? "Unlocked! The cam turns freely."
+    : `${selectedLabel} fits — the pins line up. Turn the key.`;
+});
 
 window.addEventListener("resize", () => {
   if (selectedLi) keyDeltas = computeKeyDeltas(selectedLi);

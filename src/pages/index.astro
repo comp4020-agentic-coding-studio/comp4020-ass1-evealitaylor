@@ -14,6 +14,29 @@ const ALL_BITTING = KEYS.flatMap((key) => key.bitting);
 const BITTING_MIN = Math.min(...ALL_BITTING);
 const BITTING_MAX = Math.max(...ALL_BITTING);
 
+// The lock's own pins are cut to one specific key's bitting, same as a real
+// pin-tumbler lock — that's what makes only one key "work". Bronze is the
+// one built to fit; the others are close-but-wrong on purpose so the pins
+// visibly land off the shear line.
+const LOCK_KEY_ID = "bronze";
+const LOCK_BITTING = KEYS.find((key) => key.id === LOCK_KEY_ID)!.bitting;
+
+// Fraction of chamber height (from the top) where the shear line sits —
+// must match `.shear-line`'s `top: 45%` in global.css. Pin lift math in
+// main.ts uses the same LIFT_SCALE so a key whose bitting equals
+// LOCK_BITTING lands its pins on the shear line at full insertion, and any
+// other key misses by an amount proportional to how far its cut differs.
+const SHEAR_FRAC = 0.45;
+const LIFT_SCALE = 0.25;
+
+// Chamber's key/driver pin lengths are fixed by the lock's own design, not
+// by whichever key is currently selected — this is what makes the pins
+// start uneven at rest instead of every chamber sharing one split.
+function pinRestSplit(designValue: number): { topPct: number; bottomPct: number } {
+  const topPct = (SHEAR_FRAC + designValue * LIFT_SCALE) * 100;
+  return { topPct, bottomPct: 100 - topPct };
+}
+
 // Cuts into the shaft's right edge in PIN_COUNT bands, one per pin. Deeper
 // cuts (lower bitting value) leave less shaft material — this same right
 // edge becomes the top edge once the key rotates horizontal to slide into
@@ -109,16 +132,30 @@ function shaftClipPath(bitting: number[]): string {
       >
         <div class="lock">
           <div class="lock-body">
-            <div class="pin-stack" aria-hidden="true">
+            <div
+              class="pin-stack"
+              aria-hidden="true"
+              data-lock-bitting={LOCK_BITTING.join(",")}
+              data-lift-scale={LIFT_SCALE}
+            >
               {
-                Array.from({ length: PIN_COUNT }).map((_, i) => (
-                  <div class="pin-chamber" data-testid={`pin-chamber-${i}`}>
-                    <div class="pin-assembly">
-                      <span class="pin pin-top"></span>
-                      <span class="pin pin-bottom"></span>
+                Array.from({ length: PIN_COUNT }).map((_, i) => {
+                  const { topPct, bottomPct } = pinRestSplit(LOCK_BITTING[i]);
+                  return (
+                    <div class="pin-chamber" data-testid={`pin-chamber-${i}`}>
+                      <div class="pin-assembly">
+                        <span
+                          class="pin pin-top"
+                          style={`flex: 0 0 ${topPct}%`}
+                        ></span>
+                        <span
+                          class="pin pin-bottom"
+                          style={`flex: 0 0 ${bottomPct}%`}
+                        ></span>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               }
               <div class="shear-line" data-testid="shear-line"></div>
             </div>

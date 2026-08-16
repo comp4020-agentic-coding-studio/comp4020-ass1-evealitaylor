@@ -305,6 +305,12 @@ a {
   width: 1.75rem;
   background: linear-gradient(180deg, #3a3a3a, #151515);
   border-radius: 0 0.4rem 0.4rem 0;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lock-cam.is-turned {
+  background: linear-gradient(180deg, #3ecf6e, #1f8a48);
+  box-shadow: inset 0 0 0.4rem rgb(0 0 0 / 35%), 0 0 0.6rem rgb(62 207 110 / 70%);
 }
 
 .pin-chamber {
@@ -342,8 +348,11 @@ a {
   width: 100%;
 }
 
+/* Height split (top vs. bottom) is set per-chamber inline from the lock's
+   own pin design, not here — each chamber's driver/key pin is a different
+   fixed length, same as a real lock, which is what makes the pins start
+   uneven at rest. */
 .pin-top {
-  flex: 6;
   background:
     repeating-linear-gradient(
       180deg,
@@ -354,7 +363,6 @@ a {
 }
 
 .pin-bottom {
-  flex: 4;
   background: linear-gradient(155deg, #f2d38a 0%, #c9a34e 55%, #8a6c2c 100%);
   border-radius: 0 0 0.15rem 0.15rem;
 }
@@ -368,6 +376,14 @@ a {
   border-top: 3px dashed #f4f6f8;
   box-shadow: 0 1px 2px rgb(0 0 0 / 55%);
   pointer-events: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Every pin's key/driver boundary has reached the shear line at once —
+   the visible signal that this key's cuts match the lock's pin design. */
+.shear-line.is-aligned {
+  border-top-color: #3ecf6e;
+  box-shadow: 0 0 0.5rem rgb(62 207 110 / 80%);
 }
 
 .controls {
