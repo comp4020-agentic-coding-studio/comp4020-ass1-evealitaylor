@@ -213,74 +213,167 @@ turnKeyButton?.addEventListener("click", () => {
 window.addEventListener("resize", () => {
   if (selectedLi) keyDeltas = computeKeyDeltas(selectedLi);
   update();
-  if (pickSection && !pickSection.hidden) updatePickPins();
+  if (pickSection && !pickSection.hidden) {
+    pickPinChambers.forEach((_, i) => renderPickPin(i));
+  }
 });
 
 // --- Picking mode ---------------------------------------------------------
 // Same lock, same LOCK_BITTING, same lift math as the key — the only
 // difference is what drives each pin's lift: instead of one shared `depth`
 // from a key's bitting, each pin here is pushed to its own height
-// independently, which is what a pick (rather than a cut key) actually does.
+// independently by dragging, which is what a pick (rather than a cut key)
+// actually does. Unlike the keyed side, there's no shear-line marker to aim
+// at while picking — you feel for the catch by trial, same as picking a
+// real lock blind, and only see the line once every pin is holding it.
 
 const pickToggle = document.querySelector<HTMLButtonElement>("[data-testid='pick-toggle']");
 const pickSection = document.querySelector<HTMLElement>("[data-testid='pick-section']");
-const pickPinChambers = document.querySelectorAll<HTMLButtonElement>(".pick-pin-chamber");
+const pickPinChambers = document.querySelectorAll<HTMLElement>(".pick-pin-chamber");
 const pickShearLine = document.querySelector<HTMLElement>("[data-testid='pick-shear-line']");
 const pickCam = document.querySelector<HTMLElement>("[data-testid='pick-lock'] .lock-cam");
 const pickHint = document.querySelector<HTMLElement>("[data-testid='pick-hint']");
 const turnPickButton = document.querySelector<HTMLButtonElement>("[data-testid='turn-pick']");
 
+// Ceiling a pin can be dragged to — comfortably above the highest possible
+// target (max bitting 1.5 * LIFT_SCALE = 0.375) so nothing caps out early.
+const PICK_MAX_LIFT_FRAC = 0.42;
+// How close a release has to land to the pin's real target to catch, as a
+// fraction of chamber height — tight enough that lining up takes a couple
+// of tries, not a single confident drag.
+const PICK_CATCH_EPSILON_FRAC = 0.02;
+const PICK_KEY_STEP_FRAC = 0.015;
+
 const pickSet: boolean[] = Array.from(pickPinChambers, () => false);
+// Each pin's current height while dragging, as a fraction of chamber height
+// rather than raw px, so it stays correct if the viewport resizes mid-pick.
+const pickLiftFrac: number[] = Array.from(pickPinChambers, () => 0);
 
 function getPickChamberHeightPx(): number {
   const chamber = pickPinChambers[0];
   return chamber ? chamber.getBoundingClientRect().height : 0;
 }
 
-function updatePickHint() {
+function pickTargetFrac(i: number): number {
+  return (LOCK_BITTING[i] ?? 0) * LIFT_SCALE;
+}
+
+function renderPickPin(i: number) {
+  const chamber = pickPinChambers[i];
+  const assembly = chamber?.querySelector<HTMLElement>(".pin-assembly");
+  if (!chamber || !assembly) return;
+  const liftPx = pickLiftFrac[i] * getPickChamberHeightPx();
+  assembly.style.transform = liftPx ? `translateY(${-liftPx}px)` : "";
+  chamber.classList.toggle("is-set", pickSet[i]);
+  const pct = Math.round((pickLiftFrac[i] / PICK_MAX_LIFT_FRAC) * 100);
+  chamber.setAttribute("aria-valuenow", String(Math.min(100, Math.max(0, pct))));
+  chamber.setAttribute("aria-valuetext", pickSet[i] ? "bound" : "not bound");
+}
+
+function updatePickHint(message?: string) {
   if (!pickHint) return;
+  if (message) {
+    pickHint.textContent = message;
+    return;
+  }
   const count = pickSet.filter(Boolean).length;
   const total = pickSet.length;
   if (count === 0) {
-    pickHint.textContent = "0 of 5 pins bound. Click a pin to push it up to the shear line.";
+    pickHint.textContent = "0 of 5 pins bound. Drag a pin up and feel for where it catches.";
   } else if (count < total) {
-    pickHint.textContent = `${count} of ${total} pins bound. Each one only has to clear the line on its own — keep going.`;
+    pickHint.textContent = `${count} of ${total} pins bound. Keep going — each one only has to catch on its own.`;
   } else {
     pickHint.textContent = `All ${total} pins bound — nothing left blocking the cylinder. Turn it.`;
   }
 }
 
-function updatePickPins() {
-  const chamberHeight = getPickChamberHeightPx();
-  pickPinChambers.forEach((chamber, i) => {
-    const assembly = chamber.querySelector<HTMLElement>(".pin-assembly");
-    const factor = LOCK_BITTING[i] ?? 0;
-    const lift = pickSet[i] ? factor * LIFT_SCALE * chamberHeight : 0;
-    if (assembly) assembly.style.transform = lift ? `translateY(${-lift}px)` : "";
-    chamber.classList.toggle("is-set", pickSet[i]);
-    chamber.setAttribute("aria-pressed", String(pickSet[i]));
-  });
-
+function refreshPickState() {
   const allSet = pickSet.length > 0 && pickSet.every(Boolean);
   pickShearLine?.classList.toggle("is-aligned", allSet);
   pickCam?.classList.remove("is-turned");
   if (turnPickButton) turnPickButton.disabled = !allSet;
+}
+
+// Called on release (pointerup) or on releasing a held arrow key — the
+// moment a real pick would either feel a pin catch or feel it drop.
+function settlePin(i: number) {
+  const within = Math.abs(pickLiftFrac[i] - pickTargetFrac(i)) <= PICK_CATCH_EPSILON_FRAC;
+  if (within) {
+    pickLiftFrac[i] = pickTargetFrac(i);
+    pickSet[i] = true;
+    renderPickPin(i);
+    refreshPickState();
+    updatePickHint();
+  } else {
+    pickLiftFrac[i] = 0;
+    renderPickPin(i);
+    updatePickHint(`Pin ${i + 1} didn't catch — it dropped back down.`);
+  }
+}
+
+function initPickPins() {
+  pickPinChambers.forEach((_, i) => renderPickPin(i));
+  refreshPickState();
   updatePickHint();
 }
 
 pickPinChambers.forEach((chamber, i) => {
-  chamber.addEventListener("click", () => {
-    pickSet[i] = !pickSet[i];
-    updatePickPins();
+  let dragging = false;
+  let startY = 0;
+  let startFrac = 0;
+
+  chamber.addEventListener("pointerdown", (e) => {
+    if (pickSet[i]) return;
+    dragging = true;
+    startY = e.clientY;
+    startFrac = pickLiftFrac[i];
+    chamber.setPointerCapture(e.pointerId);
+  });
+
+  chamber.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    const chamberHeight = getPickChamberHeightPx();
+    if (!chamberHeight) return;
+    const deltaFrac = (startY - e.clientY) / chamberHeight;
+    pickLiftFrac[i] = Math.min(PICK_MAX_LIFT_FRAC, Math.max(0, startFrac + deltaFrac));
+    renderPickPin(i);
+  });
+
+  function endDrag(e: PointerEvent) {
+    if (!dragging) return;
+    dragging = false;
+    chamber.releasePointerCapture(e.pointerId);
+    settlePin(i);
+  }
+
+  chamber.addEventListener("pointerup", endDrag);
+  chamber.addEventListener("pointercancel", endDrag);
+
+  // Arrow keys are the keyboard equivalent of the drag: holding one nudges
+  // the pin (browsers auto-repeat keydown while held), and releasing it
+  // (keyup) is the "let go and see if it caught" moment, same as pointerup.
+  chamber.addEventListener("keydown", (e) => {
+    if (pickSet[i] || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
+    e.preventDefault();
+    const delta = e.key === "ArrowUp" ? PICK_KEY_STEP_FRAC : -PICK_KEY_STEP_FRAC;
+    pickLiftFrac[i] = Math.min(PICK_MAX_LIFT_FRAC, Math.max(0, pickLiftFrac[i] + delta));
+    renderPickPin(i);
+  });
+
+  chamber.addEventListener("keyup", (e) => {
+    if (pickSet[i] || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
+    settlePin(i);
   });
 });
 
 turnPickButton?.addEventListener("click", () => {
-  if (!turnPickButton || turnPickButton.disabled || !pickHint) return;
+  if (!turnPickButton || turnPickButton.disabled) return;
   const turned = pickCam?.classList.toggle("is-turned");
-  pickHint.textContent = turned
-    ? "Picked! No key was ever cut for this lock — every pin just had to be set by hand."
-    : `All ${pickSet.length} pins bound — nothing left blocking the cylinder. Turn it.`;
+  updatePickHint(
+    turned
+      ? "Picked! No key was ever cut for this lock — every pin just had to be set by hand."
+      : undefined,
+  );
 });
 
 pickToggle?.addEventListener("click", () => {
@@ -289,5 +382,5 @@ pickToggle?.addEventListener("click", () => {
   pickSection.hidden = !opening;
   pickToggle.setAttribute("aria-expanded", String(opening));
   pickToggle.textContent = opening ? "Hide the pick." : "Or pick it.";
-  if (opening) updatePickPins();
+  if (opening) initPickPins();
 });

@@ -474,11 +474,25 @@ a {
   min-height: 1.6em;
 }
 
+/* No shear-line marker to aim at while picking, unlike the keyed side — it
+   only appears once every pin is actually holding it. */
+.pick-section .shear-line {
+  opacity: 0;
+  transition: opacity 0.25s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pick-section .shear-line.is-aligned {
+  opacity: 1;
+}
+
 .pick-pin-chamber {
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  font: inherit;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.pick-pin-chamber:active {
+  cursor: grabbing;
 }
 
 .pick-pin-chamber:focus-visible {
@@ -487,12 +501,14 @@ a {
 }
 
 /* Bound above the shear line — the pick equivalent of a pin that a key's
-   cut has lined up correctly. */
+   cut has lined up correctly. Kept subtle rather than a bright confirmation,
+   since picking by feel means you don't get an obvious visual reward. */
 .pick-pin-chamber.is-set {
+  cursor: default;
   box-shadow:
     inset 0.08rem 0 0.15rem rgb(0 0 0 / 15%),
     inset -0.08rem 0 0.15rem rgb(255 255 255 / 50%),
-    0 0 0 0.14rem rgb(62 207 110 / 70%);
+    0 0 0 0.08rem rgb(62 207 110 / 35%);
 }
 
 .turn-pick {
