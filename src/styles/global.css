@@ -420,6 +420,98 @@ a {
   opacity: 0.5;
 }
 
+/* Deliberately unobtrusive — the point is that it's easy to skip past, not
+   easy to notice. */
+.pick-toggle {
+  display: block;
+  margin: 3rem auto 0;
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: #9a958a;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+}
+
+.pick-toggle:hover {
+  text-decoration-color: currentcolor;
+}
+
+.pick-toggle:focus-visible {
+  outline: 3px solid #0b5fff;
+  outline-offset: 2px;
+}
+
+/* Its own dark theme, deliberately at odds with the light page around it —
+   the same lock, seen from a different angle. */
+.pick-section {
+  margin-top: 1.5rem;
+  padding: 2rem 1.25rem;
+  border-radius: 0.75rem;
+  background: #14151a;
+  color: #e7e5df;
+}
+
+.pick-section h2 {
+  margin-top: 0;
+}
+
+.pick-intro {
+  color: #b7b4ac;
+  max-width: 36rem;
+}
+
+.pick-section .lock {
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+.pick-hint {
+  text-align: center;
+  min-height: 1.6em;
+}
+
+.pick-pin-chamber {
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.pick-pin-chamber:focus-visible {
+  outline: 3px solid #6ea8ff;
+  outline-offset: 2px;
+}
+
+/* Bound above the shear line — the pick equivalent of a pin that a key's
+   cut has lined up correctly. */
+.pick-pin-chamber.is-set {
+  box-shadow:
+    inset 0.08rem 0 0.15rem rgb(0 0 0 / 15%),
+    inset -0.08rem 0 0.15rem rgb(255 255 255 / 50%),
+    0 0 0 0.14rem rgb(62 207 110 / 70%);
+}
+
+.turn-pick {
+  display: block;
+  margin: 0 auto;
+  padding: 0.5rem 1.5rem;
+  font: inherit;
+  border-radius: 0.5rem;
+  border: 1px solid #e7e5df;
+  background: #1f2027;
+  color: #e7e5df;
+  cursor: pointer;
+}
+
+.turn-pick:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 @media (width >= 40rem) {
   .stage {
     flex-direction: row;

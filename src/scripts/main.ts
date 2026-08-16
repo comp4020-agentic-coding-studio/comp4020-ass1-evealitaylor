@@ -213,4 +213,81 @@ turnKeyButton?.addEventListener("click", () => {
 window.addEventListener("resize", () => {
   if (selectedLi) keyDeltas = computeKeyDeltas(selectedLi);
   update();
+  if (pickSection && !pickSection.hidden) updatePickPins();
+});
+
+// --- Picking mode ---------------------------------------------------------
+// Same lock, same LOCK_BITTING, same lift math as the key — the only
+// difference is what drives each pin's lift: instead of one shared `depth`
+// from a key's bitting, each pin here is pushed to its own height
+// independently, which is what a pick (rather than a cut key) actually does.
+
+const pickToggle = document.querySelector<HTMLButtonElement>("[data-testid='pick-toggle']");
+const pickSection = document.querySelector<HTMLElement>("[data-testid='pick-section']");
+const pickPinChambers = document.querySelectorAll<HTMLButtonElement>(".pick-pin-chamber");
+const pickShearLine = document.querySelector<HTMLElement>("[data-testid='pick-shear-line']");
+const pickCam = document.querySelector<HTMLElement>("[data-testid='pick-lock'] .lock-cam");
+const pickHint = document.querySelector<HTMLElement>("[data-testid='pick-hint']");
+const turnPickButton = document.querySelector<HTMLButtonElement>("[data-testid='turn-pick']");
+
+const pickSet: boolean[] = Array.from(pickPinChambers, () => false);
+
+function getPickChamberHeightPx(): number {
+  const chamber = pickPinChambers[0];
+  return chamber ? chamber.getBoundingClientRect().height : 0;
+}
+
+function updatePickHint() {
+  if (!pickHint) return;
+  const count = pickSet.filter(Boolean).length;
+  const total = pickSet.length;
+  if (count === 0) {
+    pickHint.textContent = "0 of 5 pins bound. Click a pin to push it up to the shear line.";
+  } else if (count < total) {
+    pickHint.textContent = `${count} of ${total} pins bound. Each one only has to clear the line on its own — keep going.`;
+  } else {
+    pickHint.textContent = `All ${total} pins bound — nothing left blocking the cylinder. Turn it.`;
+  }
+}
+
+function updatePickPins() {
+  const chamberHeight = getPickChamberHeightPx();
+  pickPinChambers.forEach((chamber, i) => {
+    const assembly = chamber.querySelector<HTMLElement>(".pin-assembly");
+    const factor = LOCK_BITTING[i] ?? 0;
+    const lift = pickSet[i] ? factor * LIFT_SCALE * chamberHeight : 0;
+    if (assembly) assembly.style.transform = lift ? `translateY(${-lift}px)` : "";
+    chamber.classList.toggle("is-set", pickSet[i]);
+    chamber.setAttribute("aria-pressed", String(pickSet[i]));
+  });
+
+  const allSet = pickSet.length > 0 && pickSet.every(Boolean);
+  pickShearLine?.classList.toggle("is-aligned", allSet);
+  pickCam?.classList.remove("is-turned");
+  if (turnPickButton) turnPickButton.disabled = !allSet;
+  updatePickHint();
+}
+
+pickPinChambers.forEach((chamber, i) => {
+  chamber.addEventListener("click", () => {
+    pickSet[i] = !pickSet[i];
+    updatePickPins();
+  });
+});
+
+turnPickButton?.addEventListener("click", () => {
+  if (!turnPickButton || turnPickButton.disabled || !pickHint) return;
+  const turned = pickCam?.classList.toggle("is-turned");
+  pickHint.textContent = turned
+    ? "Picked! No key was ever cut for this lock — every pin just had to be set by hand."
+    : `All ${pickSet.length} pins bound — nothing left blocking the cylinder. Turn it.`;
+});
+
+pickToggle?.addEventListener("click", () => {
+  if (!pickSection) return;
+  const opening = pickSection.hidden;
+  pickSection.hidden = !opening;
+  pickToggle.setAttribute("aria-expanded", String(opening));
+  pickToggle.textContent = opening ? "Hide the pick." : "Or pick it.";
+  if (opening) updatePickPins();
 });

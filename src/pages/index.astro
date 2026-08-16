@@ -194,6 +194,79 @@ function shaftClipPath(bitting: number[]): string {
         Turn key
       </button>
     </section>
+
+    <button
+      type="button"
+      class="pick-toggle"
+      data-testid="pick-toggle"
+      aria-expanded="false"
+      aria-controls="pick-section"
+    >
+      Or pick it.
+    </button>
+
+    <section
+      id="pick-section"
+      class="pick-section"
+      aria-label="Pick the lock without a key"
+      data-testid="pick-section"
+      hidden
+    >
+      <h2>No key? Pick it.</h2>
+      <p class="pick-intro">
+        A key lifts every pin to the shear line in one motion. A pick does it
+        one pin at a time — push a pin up until its cut catches above the
+        line, move to the next, repeat. Click a pin below to set it. Once
+        every pin is holding above the line, nothing is left blocking the
+        cylinder.
+      </p>
+
+      <div class="lock" data-testid="pick-lock">
+        <div class="lock-body">
+          <div class="pin-stack" aria-hidden="true">
+            {
+              Array.from({ length: PIN_COUNT }).map((_, i) => {
+                const { topPct, bottomPct } = pinRestSplit(LOCK_BITTING[i]);
+                return (
+                  <button
+                    type="button"
+                    class="pin-chamber pick-pin-chamber"
+                    data-testid={`pick-pin-chamber-${i}`}
+                    aria-pressed="false"
+                  >
+                    <span class="visually-hidden">Pin {i + 1}</span>
+                    <span class="pin-assembly">
+                      <span
+                        class="pin pin-top"
+                        style={`flex: 0 0 ${topPct}%`}
+                      ></span>
+                      <span
+                        class="pin pin-bottom"
+                        style={`flex: 0 0 ${bottomPct}%`}
+                      ></span>
+                    </span>
+                  </button>
+                );
+              })
+            }
+            <div class="shear-line" data-testid="pick-shear-line"></div>
+          </div>
+        </div>
+        <div class="lock-cam" aria-hidden="true"></div>
+      </div>
+
+      <p class="pick-hint" data-testid="pick-hint" aria-live="polite">
+        0 of 5 pins bound.
+      </p>
+      <button
+        class="turn-pick"
+        type="button"
+        disabled
+        data-testid="turn-pick"
+      >
+        Turn cylinder
+      </button>
+    </section>
   </main>
   <script src="../scripts/main.ts"></script>
 </Layout>
