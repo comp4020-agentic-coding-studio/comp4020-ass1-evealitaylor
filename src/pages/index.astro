@@ -2,13 +2,38 @@
 import Layout from "../layouts/Layout.astro";
 
 const KEYS = [
-  { id: "bronze", label: "Bronze key" },
-  { id: "steel", label: "Steel key" },
-  { id: "brass", label: "Brass key" },
-  { id: "silver", label: "Silver key" },
+  { id: "bronze", label: "Bronze key", bitting: [1, 1, 1, 1, 1] },
+  { id: "steel", label: "Steel key", bitting: [0.3, 1.4, 0.5, 1.3, 0.4] },
+  { id: "brass", label: "Brass key", bitting: [1.5, 0.5, 1.5, 0.5, 1.5] },
+  { id: "silver", label: "Silver key", bitting: [1, 1, 0.85, 1, 1] },
 ];
 
 const PIN_COUNT = 5;
+
+const ALL_BITTING = KEYS.flatMap((key) => key.bitting);
+const BITTING_MIN = Math.min(...ALL_BITTING);
+const BITTING_MAX = Math.max(...ALL_BITTING);
+
+// Cuts into the shaft's right edge in PIN_COUNT bands, one per pin. Deeper
+// cuts (lower bitting value) leave less shaft material — this same right
+// edge becomes the top edge once the key rotates horizontal to slide into
+// the keyway, so a shallow remainder here is what lifts its matching pin
+// less at that point along the blade.
+function shaftClipPath(bitting: number[]): string {
+  const minRemain = 15;
+  const maxRemain = 95;
+  const range = BITTING_MAX - BITTING_MIN || 1;
+  const points = ["0% 0%", "100% 0%"];
+  bitting.forEach((value, i) => {
+    const t = (value - BITTING_MIN) / range;
+    const remainX = minRemain + t * (maxRemain - minRemain);
+    const top = (i / bitting.length) * 100;
+    const bottom = ((i + 1) / bitting.length) * 100;
+    points.push(`100% ${top}%`, `${remainX}% ${top}%`, `${remainX}% ${bottom}%`, `100% ${bottom}%`);
+  });
+  points.push("0% 100%");
+  return `polygon(${points.join(", ")})`;
+}
 ---
 
 <Layout title="How locks work">
@@ -35,11 +60,16 @@ const PIN_COUNT = 5;
                   class={`key key-${key.id}`}
                   data-key={key.id}
                   data-testid={`key-${key.id}`}
+                  data-bitting={key.bitting.join(",")}
                 >
                   <span class="key-head" aria-hidden="true">
                     <span class="key-hole" aria-hidden="true"></span>
                   </span>
-                  <span class="key-shaft" aria-hidden="true"></span>
+                  <span
+                    class="key-shaft"
+                    aria-hidden="true"
+                    style={`clip-path: ${shaftClipPath(key.bitting)}`}
+                  ></span>
                   <span class="visually-hidden">{key.label}</span>
                 </button>
               </li>
@@ -53,19 +83,22 @@ const PIN_COUNT = 5;
         aria-label="Lock cross-section"
         data-testid="lock-stage"
       >
-        <div class="key-slot" data-testid="key-slot" aria-hidden="true"></div>
         <div class="lock">
-          <div class="keyway" aria-hidden="true"></div>
-          <div class="pin-stack" aria-hidden="true">
-            {
-              Array.from({ length: PIN_COUNT }).map((_, i) => (
-                <div class="pin-chamber" data-testid={`pin-chamber-${i}`}>
-                  <span class="pin pin-top"></span>
-                  <span class="pin pin-bottom"></span>
-                </div>
-              ))
-            }
-            <div class="shear-line" data-testid="shear-line"></div>
+          <div class="lock-body">
+            <div class="pin-stack" aria-hidden="true">
+              {
+                Array.from({ length: PIN_COUNT }).map((_, i) => (
+                  <div class="pin-chamber" data-testid={`pin-chamber-${i}`}>
+                    <div class="pin-assembly">
+                      <span class="pin pin-top"></span>
+                      <span class="pin pin-bottom"></span>
+                    </div>
+                  </div>
+                ))
+              }
+              <div class="shear-line" data-testid="shear-line"></div>
+            </div>
+            <div class="keyway" data-testid="keyway" aria-hidden="true"></div>
           </div>
           <div class="lock-cam" aria-hidden="true"></div>
         </div>
