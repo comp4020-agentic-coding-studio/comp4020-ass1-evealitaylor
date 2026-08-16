@@ -55,10 +55,12 @@ function shaftClipPath(bitting: number[]): string {
   const n = bitting.length;
   const bandHeight = 100 / n;
   const chamferFrac = 0.4;
-  const tipTaperFrac = 0.12;
+  const tipTaperFrac = 0.22;
+  const tipApexX = 50;
 
   const rightPoints: string[] = [];
   let prevRemain = 100;
+  let tipStart = 100;
   bitting.forEach((value, i) => {
     const remain = remainOf(value);
     const top = i * bandHeight;
@@ -68,9 +70,12 @@ function shaftClipPath(bitting: number[]): string {
     rightPoints.push(`${prevRemain}% ${top}%`, `${remain}% ${chamferEnd}%`);
 
     if (i === n - 1) {
-      const tipStart = Math.max(chamferEnd, bottom - bandHeight * tipTaperFrac);
-      const tipRemain = Math.max(remain - 30, 6);
-      rightPoints.push(`${remain}% ${tipStart}%`, `${tipRemain}% ${bottom}%`);
+      // Both edges taper inward over the last stretch of blade to meet at a
+      // single point, instead of the cut edge alone stepping in — that's
+      // what makes the tip read as machined to a point rather than just cut
+      // short.
+      tipStart = Math.max(chamferEnd, bottom - bandHeight * tipTaperFrac);
+      rightPoints.push(`${remain}% ${tipStart}%`);
     } else {
       rightPoints.push(`${remain}% ${bottom}%`);
     }
@@ -78,7 +83,13 @@ function shaftClipPath(bitting: number[]): string {
     prevRemain = remain;
   });
 
-  const points = ["0% 0%", "100% 0%", ...rightPoints, "0% 100%"];
+  const points = [
+    "0% 0%",
+    "100% 0%",
+    ...rightPoints,
+    `${tipApexX}% 100%`,
+    `0% ${tipStart}%`,
+  ];
   return `polygon(${points.join(", ")})`;
 }
 ---
