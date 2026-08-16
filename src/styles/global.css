@@ -35,7 +35,7 @@ a {
 .stage {
   display: flex;
   flex-direction: column;
-  gap: 3rem;
+  gap: 5rem;
   align-items: center;
   margin-top: 1.5rem;
 }
@@ -73,7 +73,7 @@ a {
   padding: 0;
   margin: 0;
   width: 100%;
-  height: 15rem;
+  height: 10.5rem;
 }
 
 .key-item {
@@ -164,8 +164,8 @@ a {
 
 .key-shaft {
   position: relative;
-  width: 0.85rem;
-  height: 9.5rem;
+  width: 1.5rem;
+  height: 8.5rem;
   margin-top: 0.15rem;
   box-shadow:
     inset -0.08rem 0 0.2rem rgb(0 0 0 / 40%),
@@ -195,10 +195,10 @@ a {
 .key-shaft::before {
   content: "";
   position: absolute;
-  top: -0.4rem;
+  top: -0.55rem;
   left: 50%;
-  width: 170%;
-  height: 0.5rem;
+  width: 150%;
+  height: 0.65rem;
   transform: translateX(-50%);
   clip-path: polygon(18% 0%, 82% 0%, 100% 100%, 0% 100%);
   background: linear-gradient(
@@ -272,7 +272,7 @@ a {
    of the pin stack it sits under. */
 .keyway {
   width: 100%;
-  height: 1.5rem;
+  height: 1.6rem;
   background: linear-gradient(
     90deg,
     #4a4a4a 0%,
@@ -289,7 +289,7 @@ a {
   display: flex;
   gap: 0.4rem;
   height: 14rem;
-  padding: 0.6rem 0.75rem;
+  padding: 0.6rem 0.75rem 0;
   background: linear-gradient(
     180deg,
     #f3f4f6 0%,
@@ -310,7 +310,7 @@ a {
 .pin-chamber {
   width: 1.3rem;
   background: linear-gradient(180deg, #e8e5dc, #c7c2b4);
-  border-radius: 0.2rem;
+  border-radius: 0.2rem 0.2rem 0 0;
   box-shadow:
     inset 0.08rem 0 0.15rem rgb(0 0 0 / 15%),
     inset -0.08rem 0 0.15rem rgb(255 255 255 / 50%);
@@ -318,10 +318,24 @@ a {
 }
 
 .pin-assembly {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
   transition: transform 0.1s linear;
+}
+
+/* Trails below the driver pin and moves with it, so lifting the assembly
+   reveals more pin material underneath instead of bare chamber housing —
+   without this the pin looks like it floats above the key with a gap. */
+.pin-assembly::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  height: 80%;
+  background: linear-gradient(155deg, #f2d38a 0%, #c9a34e 55%, #8a6c2c 100%);
 }
 
 .pin {
@@ -395,7 +409,7 @@ a {
     flex-direction: row;
     align-items: flex-start;
     justify-content: center;
-    gap: 6rem;
+    gap: 9rem;
   }
 
   .keychain,
@@ -421,27 +435,27 @@ a {
   }
 
   .key-shaft {
-    width: 1.1rem;
-    height: 13rem;
+    width: 2rem;
+    height: 11.5rem;
   }
 
   .key-shaft::before {
-    top: -0.5rem;
-    height: 0.6rem;
+    top: -0.75rem;
+    height: 0.85rem;
   }
 
   .key-list {
-    height: 19rem;
+    height: 14rem;
   }
 
   .keyway {
-    height: 2rem;
+    height: 2.1rem;
   }
 
   .pin-stack {
     height: 18rem;
     gap: 0.5rem;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 1rem 0;
   }
 
   .pin-chamber {
