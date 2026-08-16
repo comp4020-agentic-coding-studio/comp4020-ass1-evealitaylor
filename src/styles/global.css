@@ -8,7 +8,7 @@ body {
 }
 
 main {
-  max-width: 84rem;
+  max-width: 72rem;
   margin: 0 auto;
 }
 
@@ -424,8 +424,8 @@ a {
   .stage {
     flex-direction: row;
     align-items: flex-start;
-    justify-content: space-between;
-    gap: 4rem;
+    justify-content: center;
+    gap: 13rem;
   }
 
   .keychain,
