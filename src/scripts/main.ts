@@ -1,3 +1,5 @@
+import { isKeyAligned, pinCatches, pickTargetFrac } from "./lock-logic";
+
 const keyButtons = document.querySelectorAll<HTMLButtonElement>(".key");
 const keyway = document.querySelector<HTMLElement>("[data-testid='keyway']");
 const slider = document.getElementById("insert-slider") as HTMLInputElement | null;
@@ -105,14 +107,6 @@ function currentDepth(): number {
   return slider ? Number(slider.value) / 100 : 0;
 }
 
-// A pin only reaches the shear line at full insertion if the selected key's
-// cut at that position matches the lock's own pin design — this is the
-// actual "does this key work" check, not just whether pins move.
-function isAligned(depth: number, bitting: number[]): boolean {
-  if (depth < 0.995 || bitting.length !== LOCK_BITTING.length) return false;
-  return bitting.every((value, i) => Math.abs(value - LOCK_BITTING[i]) < ALIGN_EPSILON);
-}
-
 function updatePins(depth: number, bitting: number[]) {
   const chamberHeight = getChamberHeightPx();
   pinAssemblies.forEach((assembly, i) => {
@@ -141,7 +135,7 @@ function update() {
   updatePins(depth, bitting);
   if (selectedLi) applyKeyTransform(selectedLi, depth);
 
-  const aligned = Boolean(selectedLi) && isAligned(depth, bitting);
+  const aligned = Boolean(selectedLi) && isKeyAligned(depth, bitting, LOCK_BITTING, ALIGN_EPSILON);
   shearLine?.classList.toggle("is-aligned", aligned);
   lockCam?.classList.remove("is-turned");
   if (turnKeyButton) turnKeyButton.disabled = !aligned;
@@ -254,10 +248,6 @@ function getPickChamberHeightPx(): number {
   return chamber ? chamber.getBoundingClientRect().height : 0;
 }
 
-function pickTargetFrac(i: number): number {
-  return (LOCK_BITTING[i] ?? 0) * LIFT_SCALE;
-}
-
 function renderPickPin(i: number) {
   const chamber = pickPinChambers[i];
   const assembly = chamber?.querySelector<HTMLElement>(".pin-assembly");
@@ -297,9 +287,10 @@ function refreshPickState() {
 // Called on release (pointerup) or on releasing a held arrow key — the
 // moment a real pick would either feel a pin catch or feel it drop.
 function settlePin(i: number) {
-  const within = Math.abs(pickLiftFrac[i] - pickTargetFrac(i)) <= PICK_CATCH_EPSILON_FRAC;
+  const target = pickTargetFrac(LOCK_BITTING[i] ?? 0, LIFT_SCALE);
+  const within = pinCatches(pickLiftFrac[i], target, PICK_CATCH_EPSILON_FRAC);
   if (within) {
-    pickLiftFrac[i] = pickTargetFrac(i);
+    pickLiftFrac[i] = target;
     pickSet[i] = true;
     renderPickPin(i);
     refreshPickState();

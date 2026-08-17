@@ -1,85 +1,51 @@
 # Process overview
 
-<!-- TEMPLATE: this file is a shape to fill in, not a form. Replace everything
-     in it with your own overview, and delete this comment — `pnpm
-     check:evidence` will remind you if it's still here. -->
-
-A reading-guide to how the work came together --- a map to your process, not an
-essay about it. Markers read this file and follow its citations; they don't
-trawl the repo for evidence you didn't point at, so if a moment mattered, cite
-it.
-
-This file is the shape; the course site's
-[assessment page](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#what-you-submit)
-is the requirement, and its
-[word counts](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#word-counts)
-cover every deliverable.
-
 ## What I built
 
-One paragraph: the thing, and the idea behind it.
+An interactive explainer of a pin-tumbler lock, the most common type of lock.
+The user is given a keyring containing multiple keys with its own bitting, which
+are the ridges that make each key unique. One key is selected abuts against the
+cross-section of the lock. The user drags a slider which moves the key into the lock,
+and the 5 pins move individually to the pattern of the key's bitting. Once the correct
+key has been inserted into the lock, the pins align along the shear line allowing the
+user to press a button to turn the key, which unlocks the lock. The "secret mode" allows
+users to bypass the need for keys by individually moving each pin until it binds,
+which is a common lock-picking technique. The user is unable to see the binding,
+mimicking the experience of a lock-picker in real life. This interactive explainer
+effectively shows the behaviour of the pin-tumber lock in both scenarios.
 
 ## The moments that mattered
 
-Three or four for an assignment; fewer is fine for a weekly prototype. Keep the
-list short so each moment has room to do all four jobs:
+**Using a selection of keys.** Early on I decided to gamify the experience
+by allowing the user to pick from a selection of four keys and try each one
+in the lock, in order to demonstrate more clearly how different keys interact
+with the same lock mechanism. The outward appearance of keys can be quite subtly
+different but when inserted into a lock it can make a huge difference on the pins
+inside. I wanted to reflect this by drawing similar looking keys but accentuating
+their difference in the pins themselves. I struggled a bit with Claude to get the
+keys looking as realistic as I would have liked them, but their final form strikes
+the balance of semi-realism with enhanced features to improve the demonstation.
+([`d1def65...636b45c`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-evealitaylor/compare/d1def65...636b45c)).
 
-1. **what happened** --- the problem, or the thing the agent got wrong
-2. **what you did instead of the obvious thing** --- the call you made, and why
-   it beat the obvious one
-3. **how you knew it was right** --- the check you ran, the viewport you looked
-   at, what you read before accepting the diff
-4. **the citation** --- a commit or commit range, a `CLAUDE.md` change, a check
-   that went from red to green, a prompt paired with the commit it produced
+**Adding realism into the interaction.** Initially, when Claude built the key-lock
+interaction, the key was sitting vertically alongside the lock, and the slider moved
+the pins only and not the key. I felt that this element was lacking realism and
+didn't effectively demonstrate the relationship between the key ridges and each of
+the pins. It took some back and forth with Claude in order to get this right, as Claude
+was unable to properly visualise the issue. I decided to reframe my explanation and approach
+it from Claude's angle, where there weren't pins and locks, but rather blocks of certain shapes
+and sizes printed on the screen. Once I identified the relevant elements, I described them
+in terms that Claude was better able to understand, and finally grasp my intention, thus
+delivering a realistic interaction.
+([`6e64b3c`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-evealitaylor/commit/6e64b3c)).
 
-Jobs 2 and 3 are the ones the repo can't tell a reader on its own, so they're
-where the marks are. The strongest moments are the ones where a correction
-landed in the **harness** rather than in another prompt --- a rule added to
-`CLAUDE.md`, a check wired up, an attempt thrown away: re-prompting until it
-passes is the routine case, and changing what the agent works against is the
-skilled one.
-
-Cite each moment as a link whose text is the commit hash or range and whose
-target is this repo's commit or compare URL, so a reader clicks straight to the
-evidence:
-
-- one commit: [`a1b2c3d`](https://github.com/YOUR-ORG/YOUR-REPO/commit/a1b2c3d)
-- a range:
-  [`a1b2c3d...e4f5a6b`](https://github.com/YOUR-ORG/YOUR-REPO/compare/a1b2c3d...e4f5a6b)
-
-To pair a prompt with the commit it produced, quote the prompt (curated, not a
-full transcript) next to the citation:
-
-> the prompt, verbatim
-
-Screenshots are welcome where one carries the verification better than a
-sentence does. Commit the file to this repo and link it with a **relative**
-path, which is what makes it render on GitHub: `![alt text](docs/before.png)`.
-Images don't count towards the word count and don't replace the citation.
-
-### A worked moment, for shape
-
-Delete this section along with the rest of the boilerplate --- it's here to show
-the four jobs in one paragraph, not to be imitated in content.
-
-> The date formatter kept coming back with `toLocaleDateString()` and no locale
-> argument, so the same build rendered differently on my machine and in CI. I'd
-> already re-prompted it twice, which fixed the line but not the habit, so the
-> third time I put the rule in `CLAUDE.md` instead
-> ([`3f9ac21`](https://github.com/YOUR-ORG/YOUR-REPO/commit/3f9ac21)) and added
-> a spec test that fails on a bare `toLocaleDateString`. That's what told me it
-> had actually taken: the test went red against the old code and green against
-> the new, and the next two features it wrote passed it without prompting
-> ([`3f9ac21...b7e0d14`](https://github.com/YOUR-ORG/YOUR-REPO/compare/3f9ac21...b7e0d14)).
-
-## Before you ship
-
-`pnpm check:evidence` verifies your citations resolve to real commits, that the
-current reflection entry is in `reflections/`, and that your `CLAUDE.md` is
-there --- before a marker ever opens the file. It checks that your map is
-traceable, not that it is good: the marker judges whether your small,
-deliberately chosen set of moments shows real judgement and reflection. A green
-check is not a substitute for that curation.
-
-Images are deliberately not checked, because whether one renders is visible the
-moment you look. Open this file on GitHub and look at it before you ship.
+**The Special Feature.** While I feel I have a decent understanding
+of how keys and locks interact, something which I have always been curious about
+was how locks are picked and what the process is to achieve that. I decided that
+given my success with the primary explainer, I wanted to add a 'secret mode' feature
+of manually picking the lock, which would also aid my own understanding of how the
+process works. This adds a new, hidden interaction for the user, and allows them to experience
+just how easy the picking a lock actually is (watch
+[LockPickingLawyer](https://www.youtube.com/c/lockpickinglawyer) on YouTube if
+you never want to trust a lock again - they're ALL pickable).
+([`07cec11...b07d37b`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-evealitaylor/compare/07cec11...b07d37b)).
