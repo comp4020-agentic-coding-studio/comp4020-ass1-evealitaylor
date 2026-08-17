@@ -16,15 +16,18 @@ effectively shows the behaviour of the pin-tumber lock in both scenarios.
 
 ## The moments that mattered
 
-**Using a selection of keys.** Early on I decided to gamify the experience
-by allowing the user to pick from a selection of four keys and try each one
-in the lock, in order to demonstrate more clearly how different keys interact
-with the same lock mechanism. The outward appearance of keys can be quite subtly
-different but when inserted into a lock it can make a huge difference on the pins
-inside. I wanted to reflect this by drawing similar looking keys but accentuating
-their difference in the pins themselves. I struggled a bit with Claude to get the
-keys looking as realistic as I would have liked them, but their final form strikes
-the balance of semi-realism with enhanced features to improve the demonstation.
+**Using a selection of keys.** The obvious version of this explainer ships one
+fixed key that always opens the lock — you'd never see what makes a key wrong.
+Instead I gave the user a ring of four differently-cut keys and let them try
+each one, so the same lock mechanism has to visibly reject three keys before
+accepting the fourth. The outward appearance of keys can be quite subtly
+different but when inserted into a lock it can make a huge difference on the
+pins inside, so I drew similar-looking keys but accentuated their difference
+in the pins themselves — struggling a bit with Claude to get them looking as
+realistic as I wanted before settling on their current semi-realistic form. I
+checked this was actually right by trying all four keys myself in the browser:
+only the matching key's pins align along the shear line and unlock it, and the
+other three visibly stop short.
 ([`d1def65...636b45c`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-evealitaylor/compare/d1def65...636b45c)).
 
 **Adding realism into the interaction.** Initially, when Claude built the key-lock
@@ -39,13 +42,14 @@ in terms that Claude was better able to understand, and finally grasp my intenti
 delivering a realistic interaction.
 ([`6e64b3c`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-evealitaylor/commit/6e64b3c)).
 
-**The Special Feature.** While I feel I have a decent understanding
-of how keys and locks interact, something which I have always been curious about
-was how locks are picked and what the process is to achieve that. I decided that
-given my success with the primary explainer, I wanted to add a 'secret mode' feature
-of manually picking the lock, which would also aid my own understanding of how the
-process works. This adds a new, hidden interaction for the user, and allows them to experience
-just how easy the picking a lock actually is (watch
-[LockPickingLawyer](https://www.youtube.com/c/lockpickinglawyer) on YouTube if
-you never want to trust a lock again - they're ALL pickable).
+**The Special Feature.** The obvious stopping point was the keyed lock alone —
+it already answers the brief. Instead, since I'd always been curious how locks
+are actually picked, I added a hidden 'secret mode' letting the user set each
+pin by hand until it binds, the same technique real pickers use, without
+showing them where the binding point is. I verified this wasn't just a
+decorative toggle by picking the lock myself in the browser: setting pins one
+at a time until the cylinder actually turned, which confirmed the hidden
+binding logic behaves like a real pin-tumbler rather than always succeeding
+(watch [LockPickingLawyer](https://www.youtube.com/c/lockpickinglawyer) on
+YouTube if you never want to trust a lock again - they're ALL pickable).
 ([`07cec11...b07d37b`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-evealitaylor/compare/07cec11...b07d37b)).
